@@ -1,4 +1,4 @@
-setwd("/home/sergiy/Documents/Work/Nutricia/Rework/201802")
+setwd("/home/sergiy/Documents/Work/Nutricia/Rework/201904")
 
 library(data.table)
 library(reshape2)
@@ -9,7 +9,7 @@ library(googlesheets)
 data = fread("BFprocessed.csv", header = TRUE, stringsAsFactors = FALSE, data.table = TRUE)
 
 # Set current month
-YTD.No = 2
+YTD.No = 4
 
 getTable = function(df) {
     
@@ -36,7 +36,10 @@ getTable = function(df) {
 
 dashTable = function(measure, companiesToShow, brandsToShow, filterSegments = NULL) {
 
-    df = data[eval(parse(text = filterSegments)), .(Items = sum(ITEMSC), Value = sum(VALUEC), Volume = sum(VOLUMEC)),
+    # df = data[eval(parse(text = filterSegments)), .(Items = sum(ITEMSC), Value = sum(VALUEC), Volume = sum(VOLUMEC)),
+    #           by = .(Brand, PS0, PS2, PS3, PS, Company, Ynb, Mnb, PriceSegment)]
+     
+    df = data[eval(parse(text = filterSegments)), .(Value = sum(VALUEC), Volume = sum(VOLUMEC)),
               by = .(Brand, PS0, PS2, PS3, PS, Company, Ynb, Mnb, PriceSegment)]
     
     companies = data.table::dcast(df, Company~Ynb+Mnb, fun = sum, value.var = measure)
@@ -62,7 +65,7 @@ companiesToShow = c("NUTRICIA",
                     "NESTLE",
                     "KHOROLSKII MK",
                     "HIPP",
-                    "ASSOCIACIYA DP",
+                    "ADP",
                     "VITMARK")
 
 brandsToShow = c("MALYSH ISTR")
@@ -104,7 +107,7 @@ companiesToShow = c("NUTRICIA",
                     "KHOROLSKII MK",
                     "HIPP",
                     "DMK HUMANA",
-                    "ASSOCIACIYA DP",
+                    "ADP",
                     "ABBOTT LAB",
                     "DROGA KOLINSKA",
                     "FRIESLAND CAMPINA",
@@ -283,7 +286,7 @@ companiesToShow = c("NUTRICIA",
                     "KHOROLSKII MK",
                     "DROGA KOLINSKA",
                     "HEINZ",
-                    "ASSOCIACIYA DP",
+                    "ADP",
                     "HIPP",
                     "DMK HUMANA",
                     "EKSTREYD",
@@ -309,7 +312,7 @@ companiesToShow = c("NUTRICIA",
                     "NESTLE",
                     "KHOROLSKII MK",
                     "DROGA KOLINSKA",
-                    "ASSOCIACIYA DP",
+                    "ADP",
                     "HIPP",
                     "DMK HUMANA",
                     "EKSTREYD",
@@ -358,7 +361,7 @@ gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A146", col_names=F
 
 # Puree
 
-companiesToShow = c("ASSOCIACIYA DP",
+companiesToShow = c("ADP",
                     "EKONIYA",
                     "HAME",
                     "HIPP",
