@@ -1,15 +1,16 @@
-setwd("/home/sergiy/Documents/Work/Nutricia/Rework/201910")
+setwd("/home/sergiy/Documents/Work/Nutricia/Rework/201912")
 
 library(data.table)
 library(reshape2)
 library(googlesheets)
+library(openxlsx)
 
 # Read all necessary files
 
 data = fread("BFprocessed.csv", header = TRUE, stringsAsFactors = FALSE, data.table = TRUE)
 
 # Set current month
-YTD.No = 10
+YTD.No = 12
 
 getTable = function(df) {
     
@@ -55,9 +56,11 @@ dashTable = function(measure, companiesToShow, brandsToShow, filterSegments = NU
     return(result)
 }
 
-gs_title("Dashboard Baby Food Nutricia")
-gs_object <- gs_key("1KQIWdgdqH6EuA1YyU4cjfL0ZD1HXrI6LFCmRtEfU2Oc")
+# gs_title("Dashboard Baby Food Nutricia")
+# gs_object <- gs_key("1KQIWdgdqH6EuA1YyU4cjfL0ZD1HXrI6LFCmRtEfU2Oc")
 
+wb <- createWorkbook()
+addWorksheet(wb, "Sheet1")
 
 #IMF + Dry Food + Puree
 
@@ -84,7 +87,20 @@ result[7,1] = "NUTRICIA w/o MALYSH ISTR"
 newOrder = c(5, 7, 4, 3, 2, 1, 6)
 setorder(result[, .r := order(newOrder)], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O7", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O7", col_names=FALSE, trim=FALSE)
+
+writeData(wb, 
+          "Sheet1", 
+          "IMF + Dry Food + Puree", 
+          rowNames = FALSE, 
+          xy = c("O", 4))
+
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 6), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight1")
 
 result = dashTable("Value", companiesToShow, brandsToShow, 
                    'PS0 == "IMF" | PS2 == "DRY FOOD" | PS3 == "SAVOURY MEAL" | PS3 == "FRUITS"')
@@ -97,8 +113,19 @@ result[7,1] = "NUTRICIA w/o MALYSH ISTR"
 newOrder = c(5, 7, 4, 3, 2, 1, 6)
 setorder(result[, .r := order(newOrder)], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A7", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A7", col_names=FALSE, trim=FALSE)
+writeData(wb, 
+          "Sheet1", 
+          "IMF + Dry Food + Puree", 
+          rowNames = FALSE, 
+          xy = c("A", 4))
 
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 6), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 #IMF + Dry Food
 
@@ -127,7 +154,14 @@ result[13,1] = "NUTRICIA w/o MALYSH ISTR"
 newOrder = c(12, 13, 11, 10, 2, 9, 3, 6, 5, 8, 1, 7, 4)
 setorder(result[, .r := order(newOrder)], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O18", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O18", col_names=FALSE, trim=FALSE)
+
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 18), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 result = dashTable("Value", companiesToShow, brandsToShow, 'PS0 == "IMF" | PS2 == "DRY FOOD"')
 
@@ -139,7 +173,14 @@ result[13,1] = "NUTRICIA w/o MALYSH ISTR"
 newOrder = c(12, 13, 11, 10, 2, 9, 3, 6, 5, 8, 1, 7, 4)
 setorder(result[, .r := order(newOrder)], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A18", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A18", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 18), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
 
 # IMF
 companiesToShow = c("NUTRICIA",
@@ -163,14 +204,26 @@ result = dashTable("Volume", companiesToShow, brandsToShow, 'PS0 == "IMF"')
 newOrder = c(13, 14, 15, 12, 11, 7, 4, 2, 8, 9, 3, 10, 5, 6, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O35", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O35", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 35), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
 
 result = dashTable("Value", companiesToShow, brandsToShow, 'PS0 == "IMF"')
 newOrder = c(13, 14, 15, 12, 11, 7, 4, 2, 8, 9, 3, 10, 5, 6, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A35", col_names=FALSE, trim=FALSE)
-
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A35", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 35), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 # IF Base
 companiesToShow = c("NUTRICIA",
@@ -193,13 +246,25 @@ result = dashTable("Volume", companiesToShow, brandsToShow, 'PS2 == "IF" & PS3 =
 newOrder = c(12, 13, 14, 11, 10, 7, 4, 2, 8, 3, 9, 5, 6, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O54", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O54", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 54), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 result = dashTable("Value", companiesToShow, brandsToShow, 'PS2 == "IF" & PS3 == "BASE"')
 newOrder = c(12, 13, 14, 11, 10, 7, 4, 2, 8, 3, 9, 5, 6, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A54", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A54", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 54), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 # FO Base
 companiesToShow = c("NUTRICIA",
@@ -223,14 +288,26 @@ result = dashTable("Volume", companiesToShow, brandsToShow, 'PS2 == "FO" & PS3 =
 newOrder = c(11, 12, 13, 10, 9, 7, 4, 2, 8, 3, 5, 6, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O72", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O72", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 72), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
 
 result = dashTable("Value", companiesToShow, brandsToShow, 'PS2 == "FO" & PS3 == "BASE"')
 newOrder = c(11, 12, 13, 10, 9, 7, 4, 2, 8, 3, 5, 6, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A72", col_names=FALSE, trim=FALSE)
-
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A72", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 72), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 # GUM Base
 companiesToShow = c("NUTRICIA",
                     "NESTLE",
@@ -249,13 +326,25 @@ result = dashTable("Volume", companiesToShow, brandsToShow, 'PS2 == "GUM" & PS3 
 newOrder = c(11, 10, 9, 7, 4, 2, 8, 3, 5, 6, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O89", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O89", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 89), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 result = dashTable("Value", companiesToShow, brandsToShow, 'PS2 == "GUM" & PS3 == "BASE"')
 newOrder = c(11, 10, 9, 7, 4, 2, 8, 3, 5, 6, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A89", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A89", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 89), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 # Specials
 companiesToShow = c("NUTRICIA",
@@ -272,13 +361,25 @@ result = dashTable("Volume", companiesToShow, brandsToShow, 'PS3 == "SPECIALS"')
 newOrder = c(6, 5, 4, 3, 7, 2, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O104", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O104", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 104), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 result = dashTable("Value", companiesToShow, brandsToShow, 'PS3 == "SPECIALS"')
 newOrder = c(6, 5, 4, 3, 7, 2, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A104", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A104", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 104), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 # Dry Food
 companiesToShow = c("NUTRICIA",
@@ -299,13 +400,26 @@ result = dashTable("Volume", companiesToShow, brandsToShow, 'PS2 == "DRY FOOD"')
 newOrder = c(5, 10, 11, 6, 9, 7, 8, 12, 4, 3, 2, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O115", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O115", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 115), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 result = dashTable("Value", companiesToShow, brandsToShow, 'PS2 == "DRY FOOD"')
 newOrder = c(5, 10, 11, 6, 9, 7, 8, 12, 4, 3, 2, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A115", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A115", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 115), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
 
 # Cereals
 companiesToShow = c("NUTRICIA",
@@ -327,7 +441,14 @@ result = dashTable("Volume", companiesToShow, brandsToShow,
 newOrder = c(5, 9, 10, 6, 7, 8, 11, 4, 3, 2, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O131", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O131", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 131), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
 
 result = dashTable("Value", companiesToShow, brandsToShow, 
 #                   'PS3 == "INSTANT CEREALS" | PS3 == "READY TO EAT CEREALS"')
@@ -335,7 +456,14 @@ result = dashTable("Value", companiesToShow, brandsToShow,
 newOrder = c(5, 9, 10, 6, 7, 8, 11, 4, 3, 2, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A131", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A131", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 131), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
 
 # Cereal Biscuits
 companiesToShow = c("NUTRICIA",
@@ -351,13 +479,26 @@ result = dashTable("Volume", companiesToShow, brandsToShow, 'PS3 == "CEREAL BISC
 newOrder = c(5, 2, 3, 6, 4, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O146", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O146", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 146), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
 
 result = dashTable("Value", companiesToShow, brandsToShow, 'PS3 == "CEREAL BISCUITS"')
 newOrder = c(5, 2, 3, 6, 4, 1)
 setorder(result[, .r := newOrder], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A146", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A146", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 146), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 # Puree
 
@@ -381,11 +522,25 @@ result = dashTable("Volume", companiesToShow, brandsToShow,
 newOrder = c(6, 5, 7, 1, 8, 12, 4, 2, 9, 10, 11, 3)
 setorder(result[, .r := order(newOrder)], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O156", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="O156", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("O", 156), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
 
 result = dashTable("Value", companiesToShow, brandsToShow, 
                    'PS3 == "FRUITS" | PS3 == "SAVOURY MEAL"')
 newOrder = c(6, 5, 7, 1, 8, 12, 4, 2, 9, 10, 11, 3)
 setorder(result[, .r := order(newOrder)], .r)[, .r := NULL]
 
-gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A156", col_names=FALSE, trim=FALSE)
+# gs_edit_cells(gs_object, ws="Sheet1", input = result, anchor="A156", col_names=FALSE, trim=FALSE)
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 156), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
+saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
