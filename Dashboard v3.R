@@ -1,4 +1,4 @@
-setwd("/home/sergiy/Documents/Work/Nutricia/Data/202006")
+setwd("/home/serhii/Documents/Work/Nutricia/Data/202008")
 
 library(data.table)
 # library(reshape2)
@@ -14,8 +14,20 @@ df = df[, .(Volume = sum(VolumeC), Value = sum(ValueC)),
 
 df = df[!(PS0 == "IMF" & Form == "Liquid")]
 
+
+
 # Set current month
-YTD.No = 6
+Year = df[, max(Ynb, na.rm = TRUE)]
+min.year = df[, min(Ynb, na.rm = TRUE)]
+YTD.No = 8
+
+df = df[(Ynb < Year) | (Ynb == Year & Mnb <= YTD.No)]
+
+expected.periods = data.table(Ynb = c(
+  sort(rep(min.year:(Year - 1), 12)), 
+  rep(Year, YTD.No)),
+Mnb = c(rep(1:12, (Year - min.year)), 
+        1:YTD.No))
 
 getTable = function(df, calculate.shares = NULL) {
     
@@ -55,7 +67,39 @@ dashTable = function(df, measure, companies.to.show,
     df = df[eval(parse(text = segments.to.filter)), 
               .(Volume = sum(Volume), Value = sum(Value)),
               by = .(PS0, PS2, PS3, Company, Brand, Ynb, Mnb)]
+
     
+    ## Check for the missing periods
+    
+    # df = data.table(A = c(1:3, 5,1:3, 5), B = c(1,1,1,1,2,2,2,2), C = "a")
+    # expected = data.table(AE = 1:5, BE = c(rep(1, 5), rep(2,5)))
+    # 
+    df.aggregated = df[, .(Volume = sum(Volume), Value = sum(Value)),
+                       by = .(PS0, Ynb, Mnb)]
+    
+    df.temp = df.aggregated[expected.periods, 
+                 on = c("Ynb", "Mnb")][is.na(PS0)]
+    
+    df.temp[, `:=`(Volume = 0,
+                   Value = 0,
+                   PS0 = "Unknown",
+                   PS2 = "Unknown",
+                   PS3 = "Unknown",
+                   Company = "Unknown",
+                   Brand = "Unknown")] 
+    
+    df.temp = df.temp[, .SD, .SDcols = names(df)]
+    df = rbindlist(list(df, df.temp))
+    
+    df = df[order(Ynb, Mnb)] 
+    # df = rbindlist(list(df, df.temp))
+    # 
+    # df = df[order(B, A)]
+    # df
+    
+    ##
+    
+        
     companies = dcast.data.table(df, 
                                  Company ~ Ynb + Mnb, 
                                  fun = sum, 
@@ -105,6 +149,7 @@ addWorksheet(wb, "Sheet1")
 rows.order = c(
     "IMF + Dry Food + Puree",
     "IMF + Dry Food",
+    "Foods (selected)",
     "IMF",
     "Base IF",
     "Base FO",
@@ -171,14 +216,23 @@ df6 = dcast.data.table(df[PS0 == "IMF" & PS3 == "Base"],
 df6[, PS3 := paste(PS3, PS2)]
 df6[, PS2 := NULL]
 
+df7 = dcast.data.table(df[PS3 == "Instant Cereals" | PS3 == "Cereal Biscuits" |
+                            PS3 == "Fruits" | PS3 == "Savoury Meal"], 
+                       PS0 ~ Ynb + Mnb, 
+                       fun = sum, 
+                       value.var = "Value")
+
+df7[, PS0 := "Foods (selected)"]
+
 names(df1)[1] = "Segment"
 names(df2)[1] = "Segment"    
 names(df3)[1] = "Segment"    
 names(df4)[1] = "Segment"    
 names(df5)[1] = "Segment"    
-names(df6)[1] = "Segment"    
+names(df6)[1] = "Segment"   
+names(df7)[1] = "Segment"    
 
-df.segments = rbindlist(list(df1, df2, df3, df4, df5, df6))
+df.segments = rbindlist(list(df1, df2, df3, df4, df5, df6, df7))
 
 # part of the function
 nc = length(df.segments)
@@ -208,6 +262,8 @@ df1 = cbind(Segment = "IMF + Dry Food",
                         lapply(.SD, sum) , 
                         .SDcols = 2:dim(df.segments)[2]])
 df.segments = rbindlist(list(df.segments, df1))
+
+
 
 ## Other TN calculation
 
@@ -294,14 +350,23 @@ df6 = dcast.data.table(df[PS0 == "IMF" & PS3 == "Base"],
 df6[, PS3 := paste(PS3, PS2)]
 df6[, PS2 := NULL]
 
+df7 = dcast.data.table(df[PS3 == "Instant Cereals" | PS3 == "Cereal Biscuits" |
+                            PS3 == "Fruits" | PS3 == "Savoury Meal"], 
+                       PS0 ~ Ynb + Mnb, 
+                       fun = sum, 
+                       value.var = "Volume")
+
+df7[, PS0 := "Foods (selected)"]
+
 names(df1)[1] = "Segment"
 names(df2)[1] = "Segment"    
 names(df3)[1] = "Segment"    
 names(df4)[1] = "Segment"    
 names(df5)[1] = "Segment"    
 names(df6)[1] = "Segment"    
+names(df7)[1] = "Segment"    
 
-df.segments = rbindlist(list(df1, df2, df3, df4, df5, df6))
+df.segments = rbindlist(list(df1, df2, df3, df4, df5, df6, df7))
 
 # part of the function
 nc = length(df.segments)
@@ -523,6 +588,62 @@ writeDataTable(wb,
                "Sheet1", 
                x = result, 
                xy = c("A", 62), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
+
+# Foods (selected)
+companies.to.show = c(
+  "Nutricia",
+  "Nestle",
+  "Vitmark",
+  "Hipp",
+  "ADP",
+  "Droga Kolinska",
+  "Hame",
+  "Ekoniya",
+  "Khorolskii Mk"
+)
+
+brands.to.show = c("Nutrilon",
+                   "Milupa",
+                   "Gerber")
+segments.to.filter = 'PS3 == "Instant Cereals" | PS3 == "Cereal Biscuits" |
+PS3 == "Fruits" | PS3 == "Savoury Meal"'
+
+
+result = dashTable(df, "Volume", companies.to.show, brands.to.show, segments.to.filter)
+newOrder = c(8, 9, 11, 10, 7, 12, 4, 1, 6, 5, 3, 2)
+setorder(result[, .r := newOrder], .r)[, .r := NULL]
+
+writeData(wb, 
+          "Sheet1", 
+          "Foods (selected)", 
+          rowNames = FALSE, 
+          xy = c("R", 370))
+
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("R", 373), 
+               rowNames = FALSE,
+               tableStyle = "TableStyleLight9")
+
+
+result = dashTable(df, "Value", companies.to.show, brands.to.show, segments.to.filter)
+
+setorder(result[, .r := newOrder], .r)[, .r := NULL]
+
+writeData(wb, 
+          "Sheet1", 
+          "Foods (selected)", 
+          rowNames = FALSE, 
+          xy = c("A", 370))
+
+writeDataTable(wb, 
+               "Sheet1", 
+               x = result, 
+               xy = c("A", 373), 
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
@@ -1041,7 +1162,7 @@ writeDataTable(wb,
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
-saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+# saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
 
 # Meat Meal
 
@@ -1114,7 +1235,7 @@ writeDataTable(wb,
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
-saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+# saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
 
 # Veggie Meal
 
@@ -1188,7 +1309,7 @@ writeDataTable(wb,
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
-saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+# saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
 
 # Fruit Jar/Glass
 
@@ -1263,7 +1384,7 @@ writeDataTable(wb,
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
-saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+# saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
 
 # Fruit Pouch
 
@@ -1331,7 +1452,7 @@ writeDataTable(wb,
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
-saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+# saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
 
 # AMN
 
@@ -1401,7 +1522,7 @@ writeDataTable(wb,
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
-saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+# saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
 
 # Recovery
 
@@ -1459,7 +1580,7 @@ writeDataTable(wb,
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
-saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+# saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
 
 
 # Enhanced Recovery
@@ -1523,7 +1644,7 @@ writeDataTable(wb,
                rowNames = FALSE,
                tableStyle = "TableStyleLight9")
 
-saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+# saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
 
 # Metabolics
 
@@ -1579,3 +1700,9 @@ writeDataTable(wb,
                tableStyle = "TableStyleLight9")
 
 saveWorkbook(wb, file = "dashboard.xlsx", overwrite = TRUE)
+
+
+
+
+
+
