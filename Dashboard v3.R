@@ -1,4 +1,4 @@
-setwd("/home/serhii/Documents/Work/Nutricia/Data/202008")
+setwd("/home/serhii/Documents/Work/Nutricia/Data/202009")
 
 library(data.table)
 # library(reshape2)
